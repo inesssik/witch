@@ -9,37 +9,41 @@ console.log(lastWitchDate)
 setInterval(async () => await checkWitch(), 1000 * 60 * 10)
 
 async function checkWitch() {
-    const browser = await puppeteer.launch({ headless: 'new' })
-    const page = await browser.newPage()
+    try {
+        const browser = await puppeteer.launch({ headless: 'new' })
+        const page = await browser.newPage()
 
-    await page.goto('http://ft.org.ua/ua/program', { waitUntil: 'domcontentloaded' })
-    const dates = await page.evaluate(() => {
-        let dates = ''
+        await page.goto('http://ft.org.ua/ua/program', { waitUntil: 'domcontentloaded' })
+        const dates = await page.evaluate(() => {
+            let dates = ''
 
-        let selectors = document.querySelectorAll('.performanceslist_item')
-        selectors.forEach(selector => {
-            if (selector.innerHTML.includes('Конотопська відьма')) {
-                dates += selector.querySelector('.date').innerHTML
-            }
+            let selectors = document.querySelectorAll('.performanceslist_item')
+            selectors.forEach(selector => {
+                if (selector.innerHTML.includes('Конотопська відьма')) {
+                    dates += selector.querySelector('.date').innerHTML
+                }
+            })
+
+            dates = dates.match(/([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}/g)
+            return dates
         })
 
-        dates = dates.match(/([0-2][0-9]|(3)[0-1])(\/)(((0)[0-9])|((1)[0-2]))(\/)\d{4}/g)
-        return dates
-    })
+        for (const date of dates) {
+            const parsedDate = addHours(parse(date, 'dd/MM/yyyy', new Date()), 2)
+            const difference = differenceInHours(parsedDate, lastWitchDate)
 
-    for (const date of dates) {
-        const parsedDate = addHours(parse(date, 'dd/MM/yyyy', new Date()), 2)
-        const difference = differenceInHours(parsedDate, lastWitchDate)
+            console.log(difference)
 
-        console.log(difference)
-
-        if (difference > 0) {
-            await sendBotMessage()
-            return
+            if (difference > 0) {
+                await sendBotMessage()
+                return
+            }
         }
-    }
 
-    await browser.close()
+        await browser.close()
+    } catch (error) {
+        console.log(error)
+    }
 }
 
 async function sendBotMessage() {
