@@ -18,7 +18,7 @@ async function checkWitch() {
 
         let selectors = document.querySelectorAll('.performanceslist_item')
         selectors.forEach(selector => {
-            if (selector.innerHTML.includes('Конотопська відьма') || selector.innerHTML.includes('Калігула')) {
+            if (selector.innerHTML.includes('Конотопська відьма')) {
                 dates += selector.querySelector('.date').innerHTML
             }
         })
